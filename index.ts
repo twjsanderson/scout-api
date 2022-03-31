@@ -1,5 +1,6 @@
 import express, { Application, Request, Response } from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 // import helmet from 'helmet';
 // import dotenv from 'dotenv';
 
@@ -8,14 +9,60 @@ import bodyParser from 'body-parser';
 const PORT = process.env.PORT || 5000;
 const app: Application = express();
 
+const allowedOrigins = ['http://localhost:3000'];
+
+const options: cors.CorsOptions = {
+  origin: allowedOrigins
+};
+
 // app.use(helmet());
+app.use(cors(options));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+
+let db = {
+  users: [
+    {
+      id: 1,
+      name: 'Tom',
+      email: 'twjsanderson@yahoo.ca',
+      organization: null,
+      position: null,
+      admin: true
+    },
+    {
+      id: 2,
+      name: 'Sam',
+      email: 'samthechief@hotmail.ca',
+      organization: 'Toronto Sharks',
+      position: 'owner',
+      admin: false
+    },
+    {
+      id: 3,
+      name: 'Joe',
+      email: 'Joe@hotmail.ca',
+      organization: 'Toronto Sharks',
+      position: 'scout',
+      admin: false
+    },
+  ],
+  games: [],
+  players: [],
+  arenas: [],
+  organizations: [
+    {
+      id: 1,
+      name: 'Toronto Sharks'
+    }
+  ]
+};
 
 // app.use('/api/v1', routes);
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('<h1>home</h1>');
+  res.send('<h1>Ping</h1>');
 });
 
 // POST is always for creating a resource ( does not matter if it was duplicated) 
@@ -29,9 +76,17 @@ app.get('/', (req: Request, res: Response) => {
 // get user
 app.get('/user/:id', (req: Request, res: Response) => {
   const userId = req.params.id;
-  res.json({
-    "test": userId
-  });
+  const { users } = db;
+  if (users.length) {
+    for (let user of users) {
+      if (user.id === Number(userId)) {
+        res.json(user);
+        return 
+      }
+    }
+    res.json('user not found').status(400);
+    return
+  }
 });
 
 // create a new user
@@ -41,12 +96,14 @@ app.post('/user/new', (req: Request, res: Response) => {
 
 // updates a user profile
 app.patch('/user/:id', (req: Request, res: Response) => {
-  res.send('<h1>update user</h1>');
+  const userId = req.params.id;
+  res.send(`<h1>update user with id ${userId}</h1>`);
 });
 
 // delete user profile ADMINS and ORG OWNERS ONLY
 app.delete('/user/:id', (req: Request, res: Response) => {
-  res.send('<h1>delete user</h1>');
+  const userId = req.params.id;
+  res.send(`<h1>delete user with id ${userId}</h1>`);
 });
 
 /**
